@@ -1,0 +1,8 @@
+,urlkey,timestamp,url,mime,mime-detected,status,digest,length,offset,filename,languages,encoding,redirect,html
+0,news)/,20211209135505,http://www.news/,text/html,text/html,302,ORJTF2I4TIGN5I3PRH7RAHPKQ5R3LR5Z,663,5899365,crawl-data/CC-MAIN-2021-49/segments/1637964364169.99/crawldiagnostics/CC-MAIN-20211209122503-20211209152503-00468.warc.gz,,,https://donuts.domains,"<!DOCTYPE HTML PUBLIC ""-//IETF//DTD HTML 2.0//EN"">
+<html><head>
+<title>302 Found</title>
+</head><body>
+<h1>Found</h1>
+<p>The document has moved <a href=""https://donuts.domains"">here</a>.</p>
+</body></html>"

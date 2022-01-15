@@ -1,58 +1,76 @@
-from comcrawl import IndexClient
+import os
 import pandas as pd
 import requests
-from warcio.archiveiterator import ArchiveIterator
+import time
+from bs4 import BeautifulSoup
+import glob
+import numpy as np
+
+import content
+import crawl
+from content import readcontent
 
 
-# list of available indices, "2014-52"
-# index_list = ["2017-39", "2017-34", "2017-30", "2017-26", "2017-22", "2017-17"]
-index_list = ["2021-49"]
+# def getdata():
+#     lastcrawl= getlatestcrawl()
+#     URL = "https://index.commoncrawl.org/"
+#     page = requests.get(URL)
+#     soup = BeautifulSoup(page.content, "html.parser")
+#     results = soup.find("table", class_="listing")
+#
+#     # Obtain every title of columns with tag <th>
+#     headers = []
+#     for i in results.find_all('th'):
+#         title = i.text
+#         headers.append(title)
+#     # Create a dataframe
+#     tabledf = pd.DataFrame(columns=headers)
+#
+#     # Create a for loop to fill data
+#     for j in results.find_all('tr')[1:]:
+#         row_data = j.find_all('td')
+#         row = [i.text.strip() for i in row_data]
+#         length = len(tabledf)
+#         tabledf.loc[length] = row
+#
+#     # Create directory
+#     dirName = 'CommonCrawlIndex'
+#     if not os.path.exists(dirName):
+#         os.mkdir(dirName)
+#     timestr = time.strftime("%Y%m%d-%H%M%S")
+#     filename = dirName+'/IndexData_'+ timestr+'.csv'
+#     tabledf.to_csv(filename)
+#     # print(tabledf)
+#     latestcrawl = getlatestcrawl()
+#     newdata = compareDiff(lastcrawl,latestcrawl)
+#
+#     print(newdata)
+#
+# def getlatestcrawl():
+#     list_of_files = glob.glob('CommonCrawlIndex/*')  # * means all if need specific format then *.csv
+#     latest_file= max(list_of_files, key=os.path.getctime)
+#     print(latest_file)
+#     return latest_file
+#
+# def compareDiff(lastfile,newfile):
+#     old_df = pd.read_csv(lastfile)
+#     new_df = pd.read_csv(newfile)
+#     df = new_df.merge(old_df, how='outer', indicator=True).loc[lambda x: x['_merge'] == 'left_only']
+#     return df
 
-def newscrawl():
-    client = IndexClient()
-    appended_data = []
-    for index in index_list:
-        # cc_url = "http://index.commoncrawl.org/CC-MAIN-%s-index?" % index
-        # cc_url += "url=%s&matchType=domain&output=json" % "mergersandacquisitions"
-        cc_url = "http://index.commoncrawl.org/CC-MAIN-%s-index?" % index
-        cc_url += "url=%s&matchType=domain&output=json" % "financenews"
-        client.search(cc_url, threads=4)
-        # client.search("reddit.com/r/finance/")
-        client.results = (pd.DataFrame(client.results)
-                          .sort_values(by="timestamp")
-                          .drop_duplicates("urlkey", keep="last")
-                          .to_dict("records"))
+# schedule.every(2).minutes.do(getdata)
+# schedule.every(4).hour.do(getdata)
+# schedule.every(30).day.at("10:30").do(getdata)
 
-        client.download(threads=4)
-        appended_data.append(client.results)
-        df = pd.DataFrame(client.results,columns=['urlkey','timestamp','url','mime','mime-detected','status','digest','length','offset','filename','languages','encoding','redirect','html'])
-
-    pd.DataFrame(df).to_csv("NewsData.csv")
-
-
-
-def readcontent():
-    df = pd.read_csv("NewsData.csv")
-    filenamelist = df['filename']
-    for name in filenamelist:
-        warc_url = 'https://commoncrawl.s3.amazonaws.com/' + name
-        # wet_url = warc_url.replace('/warc/', '/wet/').replace('warc.gz', 'warc.wet.gz')
-        # wat_url = warc_url.replace('/warc/', '/wat/').replace('warc.gz', 'warc.wat.gz')
-        resp = requests.get(warc_url, stream=True)
-        for record in ArchiveIterator(resp.raw, arc2warc=True):
-
-            if record.rec_type == 'warcinfo':
-                print(record.raw_stream.read())
-
-            elif record.rec_type == 'response':
-                if record.http_headers.get_header('Content-Type') == 'text/html':
-                    print("response ****************************************")
-                    print(record.rec_headers.get_header('WARC-Target-URI'))
-                    print(record.content_stream().read())
+# while 1:
+#     schedule.run_pending()
+#     time.sleep(1)
 
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    newscrawl()
-    readcontent()
+    # getdata()
+    crawl.newscrawl()
+    content.readcontent()
+
 
